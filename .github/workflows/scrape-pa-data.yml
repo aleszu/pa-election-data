@@ -36,8 +36,12 @@ jobs:
           
           curl -fL -o data/$TODAY/voterreg_legislative.xlsx "https://www.pa.gov/content/dam/copapwp-pagov/en/dos/resources/voting-and-elections/voting-and-election-statistics/current%20voterregstatsbylegislativedistricts.xlsx"
           
-          curl -fL -o data/$TODAY/avr_party_breakdown.pdf "https://www.pavoterservices.pa.gov/AVR-Party-Breakdown.pdf"
-
+          curl -fL \
+            -H "User-Agent: Mozilla/5.0" \
+            -H "Accept: application/pdf" \
+            -o data/$TODAY/avr_party_breakdown.pdf \
+            "https://www.pavoterservices.pa.gov/AVR-Party-Breakdown.pdf"
+            
           # Latest copies (overwrite each run)
           cp data/$TODAY/* data/latest/
 
