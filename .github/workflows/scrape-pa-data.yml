@@ -1,0 +1,50 @@
+name: Weekly PA Data Scraper (with history)
+
+on:
+  schedule:
+    - cron: "0 6 * * 0"   # Sundays 6 AM UTC
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set date variables
+        run: |
+          echo "TODAY=$(date -u +'%Y-%m-%d')" >> $GITHUB_ENV
+
+      - name: Create directories
+        run: |
+          mkdir -p data/$TODAY
+          mkdir -p data/latest
+
+      - name: Download files (snapshot + latest)
+        run: |
+          # Snapshot copies
+          curl -fL -o data/$TODAY/currentvotestats.xlsx "https://www.pa.gov/content/dam/copapwp-pagov/en/dos/resources/voting-and-elections/voting-and-election-statistics/currentvotestats.xlsx"
+          
+          curl -fL -o data/$TODAY/voterreg_congressional.xlsx "https://www.pa.gov/content/dam/copapwp-pagov/en/dos/resources/voting-and-elections/voting-and-election-statistics/current%20voterregstatsbycongressionaldistricts.xlsx"
+          
+          curl -fL -o data/$TODAY/voterreg_senatorial.xlsx "https://www.pa.gov/content/dam/copapwp-pagov/en/dos/resources/voting-and-elections/voting-and-election-statistics/current%20voterregstatsbysenatorialdistricts.xlsx"
+          
+          curl -fL -o data/$TODAY/voterreg_legislative.xlsx "https://www.pa.gov/content/dam/copapwp-pagov/en/dos/resources/voting-and-elections/voting-and-election-statistics/current%20voterregstatsbylegislativedistricts.xlsx"
+          
+          curl -fL -o data/$TODAY/avr_party_breakdown.pdf "https://www.pavoterservices.pa.gov/AVR-Party-Breakdown.pdf"
+
+          # Latest copies (overwrite each run)
+          cp data/$TODAY/* data/latest/
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add data/
+
+          git diff --cached --quiet || git commit -m "Add PA voter data snapshot for $TODAY"
+
+          git push
